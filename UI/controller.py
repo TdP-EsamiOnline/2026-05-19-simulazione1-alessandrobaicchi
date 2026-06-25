@@ -7,9 +7,20 @@ class Controller:
         self._view = view
         # the model, which implements the logic of the program and holds the data
         self._model = model
+        self._genereValue = None
 
+    # ------------------------------- DD "Genere" ------------------------------------
     def fillDDGenre(self):
-        pass
+        generi = self._model.getGeneri()
+        generiDDGeneriOptions = list(map(lambda x : ft.dropdown.Option(data=x, key=x.Name,
+                                                                on_click=self._choiceGenere),
+                                                                generi))
+        self._view._ddGenre.options = generiDDGeneriOptions
+        self._view.update_page()
+
+    def _choiceGenere(self,e):
+        self._genereValue = e.control.data
+    # --------------------------------------------------------------------------------
 
     def handleCreaGrafo(self, e):
         pass
