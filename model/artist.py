@@ -13,4 +13,4 @@ class Artist:
         return self.ArtistId == other.ArtistId
 
     def __str__(self):
-        return f"{self.Name} - ({self.ArtistId})"
+        return f"{self.Name}"
