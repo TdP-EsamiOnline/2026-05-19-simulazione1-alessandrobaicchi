@@ -212,3 +212,4 @@ class DAO():
         return row["cnt"] > 0 # Il risultato è un boolean: True se i due artisti sono collegabili; False se non lo sono
 
         # =================================================================================================
+

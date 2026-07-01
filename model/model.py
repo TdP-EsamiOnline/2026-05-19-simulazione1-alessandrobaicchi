@@ -1,3 +1,5 @@
+import copy
+
 import networkx as nx
 
 from database.DAO import DAO
@@ -12,6 +14,11 @@ class Model:
     # --------------------------------------------- DD "Genere" -------------------------------------------------------
     def getGeneri(self):
         return DAO.getGenre()
+    # -----------------------------------------------------------------------------------------------------------------
+
+    # --------------------------------------------- DD "Artist" -------------------------------------------------------
+    def getArtists(self):
+        return self._artists
     # -----------------------------------------------------------------------------------------------------------------
 
     # ----------------------------------------------- Grafo -----------------------------------------------------------
@@ -130,4 +137,94 @@ class Model:
         #   iterabile   → self._graph.edges(data=True)
         #
         # Risultato: listaEdges = [(nodo1, nodo2, peso), ...]
+    # -----------------------------------------------------------------------------------------------------------------
+
+
+    # --------------------------------------------- Ricorsione --------------------------------------------------------
+    """
+        Trova il cammino semplice più lungo con pesi strettamente crescenti,
+        partendo dall'artista selezionato dall'utente.
+
+        Flusso:
+        1. Inizializzo la soluzione ottima (bestPath, bestLength).
+        2. Creo la lista 'parziale' che rappresenta il cammino attuale.
+        3. Avvio la ricorsione passando pesoPrecedente = -1
+           (qualsiasi arco è valido come primo arco).
+        4. Al termine, ritorno il bestPath trovato.
+        """
+    def trovaCammino(self, startArtist):
+        """
+                Trova il cammino semplice più lungo con pesi strettamente crescenti,
+                partendo dall'artista selezionato dall'utente.
+
+                Flusso:
+                1. Inizializzo la soluzione ottima (bestPath, bestLength).
+                2. Creo la lista 'parziale' che rappresenta il cammino attuale.
+                3. Avvio la ricorsione passando pesoPrecedente = -1
+                   (qualsiasi arco è valido come primo arco).
+                4. Al termine, ritorno il bestPath trovato.
+                """
+
+        # Inizializzo la soluzione ottima
+        self._bestPath = []         # Miglior cammino trovato finora
+        self._bestLength = 0        # Lunghezza del miglior cammino
+
+        # Lista soluzione parziale
+        parziale = [startArtist]    # Cammino attuale: parto dall'artista selezionato
+
+        # Avvio della DFS: peso precedente = -1 (così qualsiasi peso va bene per il primo arco)
+        self._ricorsione(parziale, -1)
+
+        return self._bestPath
+
+
+    def _ricorsione(self, parziale, pesoPrecedente):
+        """
+            Ricorsione DFS che esplora tutti i cammini semplici con pesi strettamente crescenti.
+
+            La funzione segue la struttura classica del Prof:
+            1) Condizione di ottimalità:
+               - Se il cammino attuale è più lungo della best, aggiorno la best.
+               - Uso deepcopy per congelare la soluzione (regola del Prof).
+
+            2) Condizione di terminazione:
+               - Non esiste una condizione esplicita: la ricorsione termina quando
+                 non ci sono più successori validi da aggiungere.
+               - Terminazione naturale della DFS.
+
+            3) Ricorsione:
+               - Per ogni successore del nodo corrente:
+                   * calcolo il peso dell'arco
+                   * verifico i vincoli:
+                       - peso strettamente crescente
+                       - cammino semplice (niente ripetizioni)
+                   * se valido:
+                       - aggiungo il nodo al cammino
+                       - richiamo ricorsivamente
+                       - rimuovo il nodo (backtracking)
+            """
+
+        # 1) Condizioni di ottimalità: aggiorno la best solo se migliora
+        if len(parziale) > self._bestLength:
+            self._bestLength = len(parziale)
+            self._bestPath = copy.deepcopy(parziale)    # Copia "profonda"
+
+        # 2) Nodo corrente del cammino
+        nodoCorrente = parziale[-1]
+
+        # Prendo i successori del nodo corrente. Il testo parla di "cammino" quindi devo seguire gli archi nella
+        # direzione che hanno nel grafo (è ORIENTATO), non devo usare neighbors o predecessors: devo usare successors.
+
+        # 3) Ricorsione
+        vicini = self._graph.successors(nodoCorrente)
+        for v in vicini:
+            pesoCorrente = self._graph[nodoCorrente][v]["weight"]
+
+            # Vincoli del problema:
+            # - peso strettamente crescente;
+            # - cammino semplice (v non deve essere già nel cammino).
+            if pesoCorrente > pesoPrecedente and v not in parziale:
+                parziale.append(v)                          # Scelta
+                self._ricorsione(parziale, pesoCorrente)    # Ricorsione
+                parziale.pop()                              # Backtracking
     # -----------------------------------------------------------------------------------------------------------------
